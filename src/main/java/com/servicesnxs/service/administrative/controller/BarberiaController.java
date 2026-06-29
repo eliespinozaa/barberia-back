@@ -4,6 +4,7 @@ package com.servicesnxs.service.administrative.controller;
 import com.servicesnxs.service.administrative.dto.ApiResponse;
 import com.servicesnxs.service.administrative.dto.BarberiaRequestDTO;
 import com.servicesnxs.service.administrative.dto.BarberiaResponseDTO;
+import com.servicesnxs.service.administrative.dto.CambiarEstadoRequestDTO;
 import com.servicesnxs.service.administrative.model.Barberia;
 import com.servicesnxs.service.administrative.service.BarberiaService;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class BarberiaController {
         }
     }
 
-    
+// listar barberias
     @GetMapping("/listar/barberias")
     public ApiResponse<List<BarberiaResponseDTO>> listar() {
         try {
@@ -46,6 +47,7 @@ public class BarberiaController {
         }
     }
 
+// crear el registro de una barberia
     @PostMapping("/barberia/barberias")
     public ApiResponse<BarberiaResponseDTO> crearBarberia(
             @RequestBody BarberiaRequestDTO dto
@@ -60,6 +62,7 @@ public class BarberiaController {
         }
     }
 
+// actualizar el registro de una barberia
     @PutMapping("/barberia/barberias/{id}")
     public ApiResponse<BarberiaResponseDTO> editarBarberia(
             @PathVariable UUID id,
@@ -74,4 +77,55 @@ public class BarberiaController {
             return ApiResponse.error(500, "ERROR AL EDITAR BARBERÍA");
         }
     }
+
+// obtener el registro de una barberia
+    @GetMapping("/barberia/barberias/{id}")
+public ApiResponse<BarberiaResponseDTO> obtenerPorId(@PathVariable UUID id) {
+    try {
+        return ApiResponse.success(
+                "BARBERÍA OBTENIDA CORRECTAMENTE",
+                barberiaService.obtenerPorId(id)
+        );
+    } catch (Exception e) {
+        return ApiResponse.error(
+                500,
+                "ERROR AL OBTENER BARBERÍA"
+        );
+    }
+}
+
+// eliminar el registro de una barberia
+@DeleteMapping("/barberia/barberias/{id}")
+public ApiResponse<Void> eliminarBarberia(@PathVariable UUID id) {
+    try {
+        barberiaService.eliminar(id);
+
+        return ApiResponse.success(
+                "BARBERÍA ELIMINADA CORRECTAMENTE",
+                null
+        );
+
+    } catch (Exception e) {
+        return ApiResponse.error(
+                500,
+                "ERROR AL ELIMINAR BARBERÍA"
+        );
+    }
+}
+
+// cambiar estado (activar / suspender) de una barberia
+@PatchMapping("/barberia/barberias/{id}/estado")
+public ApiResponse<BarberiaResponseDTO> cambiarEstado(
+        @PathVariable UUID id,
+        @RequestBody CambiarEstadoRequestDTO dto
+) {
+    try {
+        return ApiResponse.success(
+                dto.isActivar() ? "BARBERÍA ACTIVADA CORRECTAMENTE" : "BARBERÍA SUSPENDIDA CORRECTAMENTE",
+                barberiaService.cambiarEstado(id, dto.isActivar())
+        );
+    } catch (Exception e) {
+        return ApiResponse.error(500, "ERROR AL CAMBIAR ESTADO DE BARBERÍA");
+    }
+}
 }

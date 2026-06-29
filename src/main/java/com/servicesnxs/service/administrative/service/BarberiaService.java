@@ -49,7 +49,7 @@ public class BarberiaService {
     public BarberiaResponseDTO editar(UUID id, BarberiaRequestDTO dto) {
         OffsetDateTime now = OffsetDateTime.now();
 
-        Barberia b = barberiaRepository.findById(id)
+        Barberia b = barberiaRepository.findActiveById(id)
                 .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
 
         b.setNombre(dto.getNombre());
@@ -68,7 +68,7 @@ public class BarberiaService {
 
     // LIST
     public List<BarberiaResponseDTO> listar() {
-        return barberiaRepository.findAll()
+        return barberiaRepository.findByIsDeletedFalse()
                 .stream()
                 .map(this::map)
                 .collect(Collectors.toList());
@@ -83,5 +83,39 @@ public class BarberiaService {
                 b.getImagen(),
                 b.getEstado(),
                 b.getUsuarioId());
+    }
+
+    public BarberiaResponseDTO obtenerPorId(UUID id) {
+        Barberia b = barberiaRepository.findActiveById(id)
+                .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
+        return map(b);
+    }
+
+    public BarberiaResponseDTO cambiarEstado(UUID id, boolean activar) {
+        OffsetDateTime now = OffsetDateTime.now();
+
+        Barberia barberia = barberiaRepository.findActiveById(id)
+                .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
+
+        barberia.setEstado((short) (activar ? 1 : 0));
+        barberia.setUpdatedAt(now);
+        barberia.setUpdatedBy("system");
+
+        Barberia guardada = barberiaRepository.save(barberia);
+
+        return map(guardada);
+    }
+
+    public void eliminar(UUID id) {
+        OffsetDateTime now = OffsetDateTime.now();
+        Barberia barberia = barberiaRepository.findActiveById(id)
+                .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
+
+        barberia.setEstado((short) 0);
+        barberia.setIsDeleted(true);
+        barberia.setDeletedAt(now);
+        barberia.setUpdatedAt(now);
+        barberia.setUpdatedBy("system");
+        barberiaRepository.save(barberia);
     }
 }
