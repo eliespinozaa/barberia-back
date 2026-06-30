@@ -98,4 +98,29 @@ public ResponseEntity<ApiResponse<UsuarioDTO>> actualizar(
                 .body(ApiResponse.error(400, e.getMessage()));
     }
 }
+
+
+@PostMapping("/usuarios")
+public ResponseEntity<ApiResponse<UsuarioDTO>> crear(@RequestBody CrearUsuarioRequest request) {
+    try {
+        UsuarioDTO creado = usuarioService.crear(request);
+        return ResponseEntity.ok(
+                ApiResponse.success("USUARIO CREADO CORRECTAMENTE", creado)
+        );
+    } catch (Exception e) {
+        return ResponseEntity
+                .status(400)
+                .body(ApiResponse.error(400, e.getMessage()));
+    }
+}
+
+@DeleteMapping("/usuarios/{id}")
+public ApiResponse<Void> eliminar(@PathVariable UUID id) {
+    try {
+        usuarioService.eliminar(id);
+        return ApiResponse.success("USUARIO ELIMINADO CORRECTAMENTE", null);
+    } catch (Exception e) {
+        return ApiResponse.error(500, "ERROR AL ELIMINAR USUARIO");
+    }
+}
 }

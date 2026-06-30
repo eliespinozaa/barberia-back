@@ -1,6 +1,7 @@
 package com.servicesnxs.service.administrative.service;
 
 import com.servicesnxs.service.administrative.dto.BarberiaResponseDTO;
+import com.servicesnxs.service.administrative.dto.CrearUsuarioRequest;
 import com.servicesnxs.service.administrative.dto.UsuarioDTO;
 import com.servicesnxs.service.administrative.dto.registrarUsuario.*;
 import com.servicesnxs.service.administrative.model.*;
@@ -22,18 +23,20 @@ public class UsuarioService {
     private final EncryptionService encryptionService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final BarberiaRepository barberiaRepository;
+    private final BarberoRepository barberoRepository;
 
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
             EncryptionService encryptionService,
-            BarberiaRepository barberiaRepository
-
+            BarberiaRepository barberiaRepository,
+BarberoRepository barberoRepository
     ) {
         this.usuarioRepository = usuarioRepository;
         this.encryptionService = encryptionService;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.barberiaRepository = barberiaRepository;
+        this.barberoRepository = barberoRepository;
 
     }
 
@@ -177,4 +180,82 @@ public UsuarioDTO actualizar(UUID id, ActualizarUsuarioRequest request) {
     Usuario guardado = usuarioRepository.save(usuario);
     return map(guardado);
 }
+
+
+private Long resolverRolId(String rol) {
+        return switch (rol) {
+            case "SUPER_ADMIN" -> 1L;
+            case "DUENO"       -> 2L;
+            case "CLIENTE"     -> 3L;
+            case "BARBERO"     -> 4L;
+            default -> throw new RuntimeException("Rol inválido: " + rol);
+        };
+    }
+
+
+    public UsuarioDTO crear(CrearUsuarioRequest request) {
+        Optional<Usuario> existe = usuarioRepository.findByEmailAndIsDeletedFalse(request.getCorreo());
+        if (existe.isPresent()) {
+            throw new RuntimeException("El correo ya está registrado");
+        }
+
+        Long rolId = resolverRolId(request.getRol());
+
+        if (rolId == 4L && request.getIdBarberia() == null) {
+            throw new RuntimeException("Debes seleccionar una barbería para un usuario con rol Barbero");
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+
+        Usuario usuario = new Usuario();
+        usuario.setNombre(request.getNombre());
+        usuario.setApellido(request.getApellido());
+        usuario.setEmail(request.getCorreo());
+        usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        usuario.setTelefono(request.getTelefono());
+        usuario.setFotoPerfil(request.getFotoPerfil());
+        usuario.setRolId(rolId);
+        usuario.setEstado(request.getEstado() != null ? request.getEstado() : 1);
+        usuario.setCreatedAt(now);
+        usuario.setUpdatedAt(now);
+        usuario.setCreatedBy("system");
+        usuario.setIsDeleted(false);
+
+        Usuario guardado = usuarioRepository.save(usuario);
+
+        if (rolId == 4L) {
+            Barbero barbero = new Barbero();
+            barbero.setIdUsuario(guardado.getId());
+            barbero.setIdBarberia(request.getIdBarberia());
+            barbero.setEstado(guardado.getEstado() != null ? guardado.getEstado().shortValue() : (short) 1);
+            barbero.setCreatedAt(now);
+            barbero.setUpdatedAt(now);
+            barbero.setCreatedBy("system");
+            barbero.setIsDeleted(false);
+            barberoRepository.save(barbero);
+        }
+
+        return map(guardado);
+    }
+
+    public void eliminar(UUID id) {
+        Usuario usuario = usuarioRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setEstado(0);
+        usuario.setIsDeleted(true);
+        usuario.setUpdatedBy("system");
+        usuario.setDeletedAt(OffsetDateTime.now());
+        usuario.setUpdatedAt(OffsetDateTime.now());
+        usuarioRepository.save(usuario);
+
+        barberoRepository.findByIdUsuarioAndIsDeletedFalse(id).forEach(barbero -> {
+            barbero.setEstado((short) 0);
+            barbero.setIsDeleted(true);
+            barbero.setUpdatedBy("system");
+            barbero.setDeletedAt(OffsetDateTime.now());
+            barbero.setUpdatedAt(OffsetDateTime.now());
+            barberoRepository.save(barbero);
+        });
+    }
 }

@@ -12,4 +12,6 @@ public interface BarberoRepository extends JpaRepository<Barbero, UUID> {
     List<Barbero> findByIdBarberiaAndIsDeletedFalse(UUID idBarberia);
 
     Optional<Barbero> findByIdAndIsDeletedFalse(UUID id);
+
+     List<Barbero> findByIdUsuarioAndIsDeletedFalse(UUID idUsuario);
 }
