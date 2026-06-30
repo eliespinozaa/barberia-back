@@ -5,6 +5,8 @@ import com.servicesnxs.service.administrative.repository.UsuarioRepository;
 import com.servicesnxs.service.administrative.repository.ClienteBarberiaRepository;
 import com.servicesnxs.service.administrative.dto.auth.AuthResponse;
 import com.servicesnxs.service.administrative.util.EncryptionService;
+import com.servicesnxs.service.administrative.util.JwtUtil;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
@@ -16,17 +18,20 @@ public class AuthService {
     private final ClienteBarberiaRepository clienteBarberiaRepository;
     private final EncryptionService encryptionService;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-    public AuthService(
-            UsuarioRepository usuarioRepository,
-            ClienteBarberiaRepository clienteBarberiaRepository,
-            EncryptionService encryptionService
-    ) {
-        this.usuarioRepository = usuarioRepository;
-        this.clienteBarberiaRepository = clienteBarberiaRepository;
-        this.encryptionService = encryptionService;
-        this.passwordEncoder = new BCryptPasswordEncoder();
-    }
+public AuthService(
+        UsuarioRepository usuarioRepository,
+        ClienteBarberiaRepository clienteBarberiaRepository,
+        EncryptionService encryptionService,
+        JwtUtil jwtUtil
+) {
+    this.usuarioRepository = usuarioRepository;
+    this.clienteBarberiaRepository = clienteBarberiaRepository;
+    this.encryptionService = encryptionService;
+    this.jwtUtil = jwtUtil;
+    this.passwordEncoder = new BCryptPasswordEncoder();
+}
 
     public AuthResponse login(String correo, String password) {
         Optional<Usuario> userOpt = usuarioRepository.findByEmailAndIsDeletedFalse(correo);
@@ -75,12 +80,8 @@ public class AuthService {
                     .existsByClienteIdAndIsDeletedFalse(user.getId());
         }
 
-        String token = "FAKE-JWT-TOKEN";
-        //String token = jwtUtil.generateToken(
-        //user.getEmail(),
-        //rol,
-        //user.getId()
-//);
+        //String token = "FAKE-JWT-TOKEN";
+        String token = jwtUtil.generateToken(user.getEmail(),rol,user.getId());
 
         return new AuthResponse(
                 user.getId(),
