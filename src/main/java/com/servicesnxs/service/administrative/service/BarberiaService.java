@@ -118,4 +118,10 @@ public class BarberiaService {
         barberia.setUpdatedBy("system");
         barberiaRepository.save(barberia);
     }
+
+public BarberiaResponseDTO obtenerPorUsuario(UUID idUsuario) {
+    Barberia b = barberiaRepository.findByUsuarioIdAndIsDeletedFalse(idUsuario)
+            .orElseThrow(() -> new RuntimeException("Este usuario no tiene una barbería asociada"));
+    return map(b);
+}
 }

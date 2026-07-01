@@ -31,4 +31,6 @@ Optional<Barberia> findActiveById(UUID id);
 
     List<Barberia> findByIsDeletedFalse();
 
+Optional<Barberia> findByUsuarioIdAndIsDeletedFalse(UUID usuarioId);
+
 }

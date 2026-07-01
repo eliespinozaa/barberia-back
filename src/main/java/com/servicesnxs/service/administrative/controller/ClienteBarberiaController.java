@@ -6,6 +6,7 @@ import com.servicesnxs.service.administrative.service.ClienteBarberiaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -31,4 +32,13 @@ public class ClienteBarberiaController {
     ) {
         return ResponseEntity.ok(service.estado(clienteId, barberiaId));
     }
+
+    
+@GetMapping("/cliente-barberia/listar")
+public ResponseEntity<ApiResponse<List<ClienteBarberiaListItemResponse>>> listar(
+        @RequestParam UUID barberiaId
+) {
+    return ResponseEntity.ok(service.listarPorBarberia(barberiaId));
+}
+
 }

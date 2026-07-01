@@ -128,4 +128,17 @@ public ApiResponse<BarberiaResponseDTO> cambiarEstado(
         return ApiResponse.error(500, "ERROR AL CAMBIAR ESTADO DE BARBERÍA");
     }
 }
+
+
+@GetMapping("/barberia/barberias/usuario/{idUsuario}")
+public ApiResponse<BarberiaResponseDTO> obtenerPorUsuario(@PathVariable UUID idUsuario) {
+    try {
+        return ApiResponse.success(
+                "BARBERÍA OBTENIDA CORRECTAMENTE",
+                barberiaService.obtenerPorUsuario(idUsuario)
+        );
+    } catch (Exception e) {
+        return ApiResponse.error(500, "ERROR AL OBTENER BARBERÍA DEL USUARIO");
+    }
+}
 }

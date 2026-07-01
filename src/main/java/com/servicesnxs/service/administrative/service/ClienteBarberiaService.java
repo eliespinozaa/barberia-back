@@ -5,6 +5,7 @@ import com.servicesnxs.service.administrative.model.ClienteBarberia;
 import com.servicesnxs.service.administrative.repository.ClienteBarberiaRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -55,4 +56,14 @@ public class ClienteBarberiaService {
         boolean asociado = repository.findByClienteIdAndBarberiaId(clienteId, barberiaId).isPresent();
         return ApiResponse.success(asociado);
     }
+
+    
+public ApiResponse<List<ClienteBarberiaListItemResponse>> listarPorBarberia(UUID barberiaId) {
+    if (barberiaId == null) {
+        return ApiResponse.error(400, "BARBERIA_ID ES OBLIGATORIO");
+    }
+    List<ClienteBarberiaListItemResponse> clientes = repository.listarPorBarberia(barberiaId);
+    return ApiResponse.success(clientes);
+}
+
 }
