@@ -1,6 +1,7 @@
 package com.servicesnxs.service.administrative.service;
 
 import com.servicesnxs.service.administrative.dto.CrearBarberoRequest;
+import com.servicesnxs.service.administrative.exception.ResourceNotFoundException;
 import com.servicesnxs.service.administrative.model.Barbero;
 import com.servicesnxs.service.administrative.model.Usuario;
 import com.servicesnxs.service.administrative.repository.BarberoRepository;
@@ -30,9 +31,10 @@ public class BarberoService {
         return repository.findByIdBarberiaAndIsDeletedFalse(idBarberia);
     }
 
-    public Barbero actualizar(UUID id, Barbero datos) {
-        Barbero existente = repository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Barbero no encontrado"));
+   public Barbero actualizar(UUID id, Barbero datos) {
+    Barbero existente = repository.findByIdAndIsDeletedFalse(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado"));
+   
         existente.setEspecialidad(datos.getEspecialidad());
         existente.setDescripcion(datos.getDescripcion());
         existente.setExperiencia(datos.getExperiencia());
@@ -40,10 +42,11 @@ public class BarberoService {
         existente.setUpdatedAt(OffsetDateTime.now());
         return repository.save(existente);
     }
+
 public Barbero crear(CrearBarberoRequest request) {
     Optional<Usuario> existe = usuarioRepository.findByEmailAndIsDeletedFalse(request.getCorreo());
     if (existe.isPresent()) {
-        throw new RuntimeException("El correo ya está registrado");
+        throw new IllegalStateException("El correo ya está registrado"); 
     }
 
     OffsetDateTime now = OffsetDateTime.now();
@@ -81,8 +84,8 @@ public Barbero crear(CrearBarberoRequest request) {
 
 public void eliminar(UUID id) {
     Barbero existente = repository.findByIdAndIsDeletedFalse(id)
-            .orElseThrow(() -> new RuntimeException("Barbero no encontrado"));
-
+            .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado"));
+  
     existente.setEstado((short) 0);
     existente.setIsDeleted(true);
     existente.setUpdatedBy("system");

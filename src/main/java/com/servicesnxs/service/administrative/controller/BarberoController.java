@@ -4,14 +4,15 @@ import com.servicesnxs.service.administrative.dto.ApiResponse;
 import com.servicesnxs.service.administrative.dto.CrearBarberoRequest;
 import com.servicesnxs.service.administrative.model.Barbero;
 import com.servicesnxs.service.administrative.service.BarberoService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 public class BarberoController {
-
     private final BarberoService service;
 
     public BarberoController(BarberoService service) {
@@ -19,54 +20,26 @@ public class BarberoController {
     }
 
     @GetMapping("/barberos/barberia/{idBarberia}")
-    public ApiResponse<List<Barbero>> listarPorBarberia(
-            @PathVariable UUID idBarberia
-    ) {
-        try {
-            return ApiResponse.success(
-                    "BARBEROS OBTENIDOS CORRECTAMENTE",
-                    service.listarPorBarberia(idBarberia)
-            );
-        } catch (Exception e) {
-            return ApiResponse.error(500, e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<List<Barbero>>> listarPorBarberia(@PathVariable UUID idBarberia) {
+        return ResponseEntity.ok(ApiResponse.success("BARBEROS OBTENIDOS CORRECTAMENTE", service.listarPorBarberia(idBarberia)));
     }
 
-@PutMapping("/barberos/{id}")
-public ApiResponse<Barbero> actualizar(
-        @PathVariable UUID id,
-        @RequestBody Barbero datos
-) {
-    try {
-        return ApiResponse.success(
-                "BARBERO ACTUALIZADO CORRECTAMENTE",
-                service.actualizar(id, datos)
-        );
-    } catch (Exception e) {
-        return ApiResponse.error(500, e.getMessage());
+    @PutMapping("/barberos/{id}")
+    public ResponseEntity<ApiResponse<Barbero>> actualizar(@PathVariable UUID id, @RequestBody Barbero datos) {
+        return ResponseEntity.ok(ApiResponse.success("BARBERO ACTUALIZADO CORRECTAMENTE", service.actualizar(id, datos)));
     }
-}
 
-
-@PostMapping("/barberos")
-public ApiResponse<Barbero> crear(@RequestBody CrearBarberoRequest request) {
-    try {
-        return ApiResponse.success(
-                "BARBERO CREADO CORRECTAMENTE",
-                service.crear(request)
-        );
-    } catch (Exception e) {
-        return ApiResponse.error(400, e.getMessage());
+    @PostMapping("/barberos")
+    public ResponseEntity<ApiResponse<Barbero>> crear(@RequestBody CrearBarberoRequest request) {
+        Barbero creado = service.crear(request);
+        URI location = URI.create("/barberos/" + creado.getId());
+        return ResponseEntity.created(location)
+                .body(ApiResponse.success("BARBERO CREADO CORRECTAMENTE", creado));
     }
-}
 
-@DeleteMapping("/barberos/{id}")
-public ApiResponse<Void> eliminarBarbero(@PathVariable UUID id) {
-    try {
+    @DeleteMapping("/barberos/{id}")
+    public ResponseEntity<Void> eliminarBarbero(@PathVariable UUID id) {
         service.eliminar(id);
-        return ApiResponse.success("BARBERO ELIMINADO CORRECTAMENTE", null);
-    } catch (Exception e) {
-        return ApiResponse.error(500, "ERROR AL ELIMINAR BARBERO");
+        return ResponseEntity.noContent().build();
     }
-}
 }

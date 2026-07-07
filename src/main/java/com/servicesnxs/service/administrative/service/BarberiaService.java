@@ -2,6 +2,7 @@ package com.servicesnxs.service.administrative.service;
 
 import com.servicesnxs.service.administrative.dto.BarberiaRequestDTO;
 import com.servicesnxs.service.administrative.dto.BarberiaResponseDTO;
+import com.servicesnxs.service.administrative.exception.ResourceNotFoundException;
 import com.servicesnxs.service.administrative.model.Barberia;
 import com.servicesnxs.service.administrative.repository.BarberiaRepository;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class BarberiaService {
         OffsetDateTime now = OffsetDateTime.now();
 
         Barberia b = barberiaRepository.findActiveById(id)
-                .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Barbería no encontrada"));
 
         b.setNombre(dto.getNombre());
         b.setDireccion(dto.getDireccion());
@@ -87,7 +88,7 @@ public class BarberiaService {
 
     public BarberiaResponseDTO obtenerPorId(UUID id) {
         Barberia b = barberiaRepository.findActiveById(id)
-                .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Barbería no encontrada"));
         return map(b);
     }
 
@@ -95,7 +96,7 @@ public class BarberiaService {
         OffsetDateTime now = OffsetDateTime.now();
 
         Barberia barberia = barberiaRepository.findActiveById(id)
-                .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Barbería no encontrada"));
 
         barberia.setEstado((short) (activar ? 1 : 0));
         barberia.setUpdatedAt(now);
@@ -108,8 +109,9 @@ public class BarberiaService {
 
     public void eliminar(UUID id) {
         OffsetDateTime now = OffsetDateTime.now();
+
         Barberia barberia = barberiaRepository.findActiveById(id)
-                .orElseThrow(() -> new RuntimeException("Barbería no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Barbería no encontrada"));
 
         barberia.setEstado((short) 0);
         barberia.setIsDeleted(true);
@@ -119,9 +121,9 @@ public class BarberiaService {
         barberiaRepository.save(barberia);
     }
 
-public BarberiaResponseDTO obtenerPorUsuario(UUID idUsuario) {
-    Barberia b = barberiaRepository.findByUsuarioIdAndIsDeletedFalse(idUsuario)
-            .orElseThrow(() -> new RuntimeException("Este usuario no tiene una barbería asociada"));
-    return map(b);
-}
+    public BarberiaResponseDTO obtenerPorUsuario(UUID idUsuario) {
+        Barberia b = barberiaRepository.findByUsuarioIdAndIsDeletedFalse(idUsuario)
+                .orElseThrow(() -> new ResourceNotFoundException("Este usuario no tiene una barbería asociada"));
+        return map(b);
+    }
 }
