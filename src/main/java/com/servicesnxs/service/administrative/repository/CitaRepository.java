@@ -38,10 +38,10 @@ public interface CitaRepository extends JpaRepository<Cita, UUID> {
             @Param("barberiaId") UUID barberiaId
     );
 
-
-    @Query("""
+@Query("""
     SELECT new com.servicesnxs.service.administrative.dto.CitaDiaResponse(
         c.id,
+        c.idBarbero,
         c.horaInicio,
         c.horaFin,
         u.nombre,

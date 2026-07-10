@@ -1,10 +1,12 @@
 package com.servicesnxs.service.administrative.controller;
 
 import com.servicesnxs.service.administrative.dto.ApiResponse;
+import com.servicesnxs.service.administrative.dto.CitaCrearRequest;
 import com.servicesnxs.service.administrative.dto.CitaDiaResponse;
 import com.servicesnxs.service.administrative.dto.CitaHistorialResponse;
 import com.servicesnxs.service.administrative.service.CitaService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,4 +58,12 @@ public class CitaController {
         citaService.finalizar(idCita);
         return ResponseEntity.ok(ApiResponse.success("CITA FINALIZADA CORRECTAMENTE", null));
     }
+
+
+    @PostMapping("/citas")
+public ResponseEntity<ApiResponse<UUID>> crear(@RequestBody CitaCrearRequest request) {
+    UUID idCreada = citaService.crear(request);
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body(ApiResponse.success("CITA CREADA CORRECTAMENTE", idCreada));
+}
 }

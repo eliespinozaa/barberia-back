@@ -1,6 +1,7 @@
 package com.servicesnxs.service.administrative.service;
 
 import com.servicesnxs.service.administrative.dto.*;
+import com.servicesnxs.service.administrative.exception.ResourceNotFoundException;
 import com.servicesnxs.service.administrative.model.ClienteBarberia;
 import com.servicesnxs.service.administrative.repository.ClienteBarberiaRepository;
 import org.springframework.stereotype.Service;
@@ -12,14 +13,17 @@ import java.util.UUID;
 public class ClienteBarberiaService {
 
     private final ClienteBarberiaRepository repository;
+    private final BarberiaService barberiaService;
 
-    public ClienteBarberiaService(ClienteBarberiaRepository repository) {
+    public ClienteBarberiaService(ClienteBarberiaRepository repository,
+                                   BarberiaService barberiaService) {
         this.repository = repository;
+        this.barberiaService = barberiaService;
     }
 
-    public ApiResponse<ClienteBarberiaResponse> asociar(ClienteBarberiaRequest req) {
+    public ClienteBarberiaResponse asociar(ClienteBarberiaRequest req) {
         if (req.getClienteId() == null || req.getBarberiaId() == null) {
-            return ApiResponse.error(400, "CLIENTE_ID Y BARBERIA_ID SON OBLIGATORIOS");
+            throw new IllegalArgumentException("CLIENTE_ID Y BARBERIA_ID SON OBLIGATORIOS");
         }
 
         boolean existe = repository.existsByClienteIdAndBarberiaId(
@@ -28,12 +32,11 @@ public class ClienteBarberiaService {
         );
 
         if (existe) {
-            ClienteBarberiaResponse resp = new ClienteBarberiaResponse(
+            return new ClienteBarberiaResponse(
                     true,
                     "EL CLIENTE YA ESTA ASOCIADO A ESTA BARBERIA",
                     req.getBarberiaId()
             );
-            return ApiResponse.success("YA EXISTE ASOCIACION", resp);
         }
 
         ClienteBarberia cb = new ClienteBarberia();
@@ -41,29 +44,37 @@ public class ClienteBarberiaService {
         cb.setBarberiaId(req.getBarberiaId());
         repository.save(cb);
 
-        ClienteBarberiaResponse resp = new ClienteBarberiaResponse(
+        return new ClienteBarberiaResponse(
                 true,
                 "CLIENTE ASOCIADO CORRECTAMENTE",
                 req.getBarberiaId()
         );
-        return ApiResponse.success(resp);
     }
 
-    public ApiResponse<Boolean> estado(UUID clienteId, UUID barberiaId) {
+    public boolean estado(UUID clienteId, UUID barberiaId) {
         if (clienteId == null || barberiaId == null) {
-            return ApiResponse.error(400, "CLIENTE_ID Y BARBERIA_ID SON OBLIGATORIOS");
+            throw new IllegalArgumentException("CLIENTE_ID Y BARBERIA_ID SON OBLIGATORIOS");
         }
-        boolean asociado = repository.findByClienteIdAndBarberiaId(clienteId, barberiaId).isPresent();
-        return ApiResponse.success(asociado);
+        return repository.findByClienteIdAndBarberiaId(clienteId, barberiaId).isPresent();
     }
 
-    
-public ApiResponse<List<ClienteBarberiaListItemResponse>> listarPorBarberia(UUID barberiaId) {
-    if (barberiaId == null) {
-        return ApiResponse.error(400, "BARBERIA_ID ES OBLIGATORIO");
+    public List<ClienteBarberiaListItemResponse> listarPorBarberia(UUID barberiaId) {
+        if (barberiaId == null) {
+            throw new IllegalArgumentException("BARBERIA_ID ES OBLIGATORIO");
+        }
+        return repository.listarPorBarberia(barberiaId);
     }
-    List<ClienteBarberiaListItemResponse> clientes = repository.listarPorBarberia(barberiaId);
-    return ApiResponse.success(clientes);
-}
 
+    public BarberiaResponseDTO obtenerBarberiaDelCliente(UUID clienteId) {
+        if (clienteId == null) {
+            throw new IllegalArgumentException("CLIENTE_ID ES OBLIGATORIO");
+        }
+
+        ClienteBarberia asociacion = repository
+                .findTopByClienteIdAndIsDeletedFalseOrderByFechaRegistroDesc(clienteId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Este cliente no tiene ninguna barbería asociada"));
+
+        return barberiaService.obtenerPorId(asociacion.getBarberiaId());
+    }
 }
