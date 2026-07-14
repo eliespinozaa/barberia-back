@@ -42,4 +42,10 @@ public class BarberoController {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+
+    @GetMapping("/barberos/usuario/{idUsuario}")
+public ResponseEntity<ApiResponse<Barbero>> obtenerPorUsuario(@PathVariable UUID idUsuario) {
+    return ResponseEntity.ok(ApiResponse.success("BARBERO OBTENIDO CORRECTAMENTE", service.obtenerPorUsuario(idUsuario)));
+}
 }

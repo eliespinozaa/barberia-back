@@ -103,4 +103,12 @@ public void eliminar(UUID id) {
             usuarioRepository.save(usuario);
         });
 }
+
+
+public Barbero obtenerPorUsuario(UUID idUsuario) {
+    return repository.findByIdUsuarioAndIsDeletedFalse(idUsuario)
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException("Barbero no encontrado para este usuario"));
+}
 }
