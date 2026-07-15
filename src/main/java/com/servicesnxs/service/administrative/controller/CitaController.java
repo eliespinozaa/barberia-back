@@ -1,6 +1,7 @@
 package com.servicesnxs.service.administrative.controller;
 
 import com.servicesnxs.service.administrative.dto.ApiResponse;
+import com.servicesnxs.service.administrative.dto.CitaActualizarRequest;
 import com.servicesnxs.service.administrative.dto.CitaCrearRequest;
 import com.servicesnxs.service.administrative.dto.CitaDiaResponse;
 import com.servicesnxs.service.administrative.dto.CitaHistorialResponse;
@@ -65,5 +66,15 @@ public ResponseEntity<ApiResponse<UUID>> crear(@RequestBody CitaCrearRequest req
     UUID idCreada = citaService.crear(request);
     return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiResponse.success("CITA CREADA CORRECTAMENTE", idCreada));
+}
+
+
+@PutMapping("/citas/{idCita}")
+public ResponseEntity<ApiResponse<Void>> actualizar(
+        @PathVariable UUID idCita,
+        @RequestBody CitaActualizarRequest request
+) {
+    citaService.actualizar(idCita, request);
+    return ResponseEntity.ok(ApiResponse.success("CITA ACTUALIZADA CORRECTAMENTE", null));
 }
 }

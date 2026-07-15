@@ -1,5 +1,6 @@
 package com.servicesnxs.service.administrative.service;
 
+import com.servicesnxs.service.administrative.dto.CitaActualizarRequest;
 import com.servicesnxs.service.administrative.dto.CitaCrearRequest;
 import com.servicesnxs.service.administrative.dto.CitaDiaResponse;
 import com.servicesnxs.service.administrative.dto.CitaHistorialResponse;
@@ -119,5 +120,37 @@ public UUID crear(CitaCrearRequest request) {
 
     Cita guardada = citaRepository.save(cita);
     return guardada.getId();
+}
+
+
+
+public void actualizar(UUID idCita, CitaActualizarRequest request) {
+    Cita cita = obtenerCitaActiva(idCita);
+
+    List<CitaDiaResponse> citasDelDia = citaRepository.listarPorBarberiaYFecha(
+            cita.getIdBarberia(), request.getFecha());
+
+    boolean ocupado = citasDelDia.stream()
+        .filter(c -> !c.getId().equals(idCita))
+        .filter(c -> !"CANCELADA".equals(c.getEstado()))
+        .anyMatch(c -> c.getIdBarbero().equals(request.getIdBarbero())
+                && c.getHora().equals(request.getHoraInicio()));
+
+    if (ocupado) {
+        throw new IllegalStateException("El horario seleccionado ya no está disponible");
+    }
+
+    int duracion = request.getDuracionMinutos() != null ? request.getDuracionMinutos() : 60;
+
+    cita.setIdBarbero(request.getIdBarbero());
+    cita.setIdServicio(request.getIdServicio());
+    cita.setFecha(request.getFecha());
+    cita.setHoraInicio(request.getHoraInicio());
+    cita.setHoraFin(request.getHoraInicio().plusMinutes(duracion));
+    if (request.getNotas() != null) {
+        cita.setNotas(request.getNotas());
+    }
+
+    citaRepository.save(cita);
 }
 }
