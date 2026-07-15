@@ -17,28 +17,31 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
- @Autowired
+    @Autowired
     private JwtAuthFilter jwtAuthFilter;
 
-     @Bean
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())
-            .csrf(csrf -> csrf.disable())
-            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> {
-                auth.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll();
-                auth.requestMatchers("/", "/auth/login", "/usuarios/register", "/health", "/error").permitAll();
-                auth.anyRequest().authenticated(); 
-            })
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            .httpBasic(basic -> basic.disable());
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll();
+                    auth.requestMatchers("/", "/auth/login", "/usuarios/register", "/health", "/error").permitAll();
+
+                    auth.requestMatchers(org.springframework.http.HttpMethod.GET, "/barberia/barberias").permitAll();
+                    auth.requestMatchers(org.springframework.http.HttpMethod.GET, "/resenas/barberia/*/resumen").permitAll();
+
+                    auth.anyRequest().authenticated();
+                })
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .httpBasic(basic -> basic.disable());
 
         return http.build();
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
