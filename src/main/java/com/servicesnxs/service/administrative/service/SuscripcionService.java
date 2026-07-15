@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import com.servicesnxs.service.administrative.dto.SuscripcionDTO;
+import com.servicesnxs.service.administrative.exception.ResourceNotFoundException;
 import com.servicesnxs.service.administrative.model.Pago;
 import com.servicesnxs.service.administrative.model.Suscripcion;
 import com.servicesnxs.service.administrative.repository.PagoRepository;
@@ -22,32 +23,67 @@ public class SuscripcionService {
 
     public SuscripcionService(
             SuscripcionRepository suscripcionRepository,
-            PagoRepository pagoRepository
-    ) {
+            PagoRepository pagoRepository) {
         this.suscripcionRepository = suscripcionRepository;
         this.pagoRepository = pagoRepository;
     }
 
     public SuscripcionDTO obtenerActiva(UUID idBarberia) {
-    List<Suscripcion> suscripciones = suscripcionRepository.findUltimaSuscripcion(idBarberia);
-    if (suscripciones.isEmpty()) {
-        throw new RuntimeException("No hay suscripción registrada");
+        List<Suscripcion> suscripciones = suscripcionRepository.findUltimaSuscripcion(idBarberia);
+        if (suscripciones.isEmpty()) {
+            return null;
+        }
+        return map(suscripciones.get(0));
     }
-    return map(suscripciones.get(0)); 
-}
 
-    public SuscripcionDTO suspender(UUID idSuscripcion) {
-        Suscripcion s = suscripcionRepository.findById(idSuscripcion)
-                .orElseThrow(() -> new RuntimeException("Suscripción no encontrada"));
+    public SuscripcionDTO crearSuscripcion(UUID idBarberia) {
+        List<Suscripcion> existentes = suscripcionRepository.findUltimaSuscripcion(idBarberia);
+        boolean tieneActiva = existentes.stream()
+                .anyMatch(s -> "ACTIVA".equals(s.getEstado()));
 
-        if (!"ACTIVA".equals(s.getEstado())) {
-            throw new RuntimeException("Solo se puede suspender una suscripción ACTIVA");
+        if (tieneActiva) {
+            throw new IllegalStateException("La barbería ya tiene una suscripción activa");
         }
 
-        s.setEstado("SUSPENDIDA");
-        s.setUpdatedAt(OffsetDateTime.now());
-        return map(suscripcionRepository.save(s));
+        LocalDate hoy = LocalDate.now();
+
+        Suscripcion nueva = new Suscripcion();
+        nueva.setIdBarberia(idBarberia);
+        nueva.setFechaInicio(hoy);
+        nueva.setFechaFin(hoy.plusDays(30));
+        nueva.setEstado("ACTIVA");
+        nueva.setCreatedAt(OffsetDateTime.now());
+        nueva.setUpdatedAt(OffsetDateTime.now());
+        nueva.setCreatedBy("system");
+        nueva.setIsDeleted(false);
+        Suscripcion guardada = suscripcionRepository.save(nueva);
+
+        Pago pago = new Pago();
+        pago.setIdSuscripcion(guardada.getId());
+        pago.setIdBarberia(idBarberia);
+        pago.setMonto(PRECIO_MEMBRESIA);
+        pago.setEstado("PENDIENTE");
+        pago.setCreatedAt(OffsetDateTime.now());
+        pago.setUpdatedAt(OffsetDateTime.now());
+        pago.setCreatedBy("system");
+        pago.setIsDeleted(false);
+        pagoRepository.save(pago);
+
+        return map(guardada);
     }
+
+   public SuscripcionDTO suspender(UUID idSuscripcion) {
+    Suscripcion s = suscripcionRepository.findById(idSuscripcion)
+            .orElseThrow(() -> new ResourceNotFoundException("Suscripción no encontrada"));
+
+    if (!"ACTIVA".equals(s.getEstado())) {
+        throw new IllegalStateException("Solo se puede suspender una suscripción ACTIVA");
+    }
+
+    s.setEstado("SUSPENDIDA");
+    s.setUpdatedAt(OffsetDateTime.now());
+    return map(suscripcionRepository.save(s));
+}
 
     public SuscripcionDTO reactivar(UUID idSuscripcion) {
         Suscripcion anterior = suscripcionRepository.findById(idSuscripcion)
@@ -62,9 +98,9 @@ public class SuscripcionService {
         }
 
         LocalDate hoy = LocalDate.now();
-       
-LocalDate inicioNuevo = hoy;
-LocalDate finNuevo    = hoy.plusDays(30);
+
+        LocalDate inicioNuevo = hoy;
+        LocalDate finNuevo = hoy.plusDays(30);
 
         Suscripcion nueva = new Suscripcion();
         nueva.setIdBarberia(anterior.getIdBarberia());
