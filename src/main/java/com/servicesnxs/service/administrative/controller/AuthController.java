@@ -20,9 +20,20 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @PostMapping("/auth/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        authService.solicitarRecuperacion(request.getCorreo());
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PostMapping("/auth/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody ResetPasswordRequest request) {
+        authService.restablecerPassword(request.getToken(), request.getNuevaPassword());
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
     @GetMapping("/health")
     public String health() {
         return "OK";
     }
-
 }

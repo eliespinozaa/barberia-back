@@ -34,6 +34,8 @@ public class SecurityConfig {
                     auth.requestMatchers(org.springframework.http.HttpMethod.GET, "/barberia/barberias").permitAll();
                     auth.requestMatchers(org.springframework.http.HttpMethod.GET, "/resenas/barberia/*/resumen").permitAll();
                     auth.requestMatchers(org.springframework.http.HttpMethod.GET, "/servicios/barberia/*").permitAll();
+                    auth.requestMatchers(org.springframework.http.HttpMethod.POST, "/auth/forgot-password").permitAll();
+                    auth.requestMatchers(org.springframework.http.HttpMethod.POST, "/auth/reset-password").permitAll();
 
                     auth.anyRequest().authenticated();
                 })
