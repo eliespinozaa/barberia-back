@@ -103,7 +103,8 @@ public class ResenaService {
         r.setEstado((short) 1);
         r.setIsDeleted(false);
         r.setCreatedAt(ahora);
-        r.setUpdatedAt(ahora);   
+        r.setUpdatedAt(ahora);  
+        r.setCreatedBy("system");
 
         Resena guardada = resenaRepository.save(r);
         return mapear(guardada);
