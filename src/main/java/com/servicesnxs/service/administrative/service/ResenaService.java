@@ -1,13 +1,15 @@
 package com.servicesnxs.service.administrative.service;
  
 import com.servicesnxs.service.administrative.dto.ResenaResumenDTO;
+import com.servicesnxs.service.administrative.dto.ResenaCrearRequest;
 import com.servicesnxs.service.administrative.dto.ResenaResponseDTO;
 import com.servicesnxs.service.administrative.model.Resena;
 import com.servicesnxs.service.administrative.model.Usuario;
 import com.servicesnxs.service.administrative.repository.ResenaRepository;
 import com.servicesnxs.service.administrative.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
- 
+
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -79,5 +81,31 @@ public class ResenaService {
         }
  
         return dto;
+    }
+
+    public boolean existePorCita(UUID idCita) {
+        return resenaRepository.existsPorCita(idCita);
+    }
+
+    public ResenaResponseDTO crear(ResenaCrearRequest request) {
+        if (resenaRepository.existsPorCita(request.getIdCita())) {
+            throw new IllegalStateException("Ya existe una reseña para esta cita");
+        }
+
+        OffsetDateTime ahora = OffsetDateTime.now();
+
+        Resena r = new Resena();
+        r.setIdUsuario(request.getIdUsuario());
+        r.setIdBarberia(request.getIdBarberia());
+        r.setIdCita(request.getIdCita());
+        r.setCalificacion(request.getCalificacion());
+        r.setComentario(request.getComentario());
+        r.setEstado((short) 1);
+        r.setIsDeleted(false);
+        r.setCreatedAt(ahora);
+        r.setUpdatedAt(ahora);   
+
+        Resena guardada = resenaRepository.save(r);
+        return mapear(guardada);
     }
 }

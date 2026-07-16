@@ -8,11 +8,9 @@ import org.springframework.stereotype.Repository;
  
 import java.util.List;
 import java.util.UUID;
- 
-@Repository
+ @Repository
 public interface ResenaRepository extends JpaRepository<Resena, UUID> {
- 
-    // Todas las reseñas activas de una barbería, más recientes primero
+
     @Query("""
         SELECT r FROM Resena r
         WHERE r.idBarberia = :idBarberia
@@ -21,8 +19,7 @@ public interface ResenaRepository extends JpaRepository<Resena, UUID> {
         ORDER BY r.createdAt DESC
         """)
     List<Resena> findByBarberia(@Param("idBarberia") UUID idBarberia);
- 
-    // Promedio de calificación
+
     @Query("""
         SELECT AVG(r.calificacion)
         FROM Resena r
@@ -31,8 +28,7 @@ public interface ResenaRepository extends JpaRepository<Resena, UUID> {
           AND r.estado     = 1
         """)
     Double promedioCalificacion(@Param("idBarberia") UUID idBarberia);
- 
-    // Total de reseñas
+
     @Query("""
         SELECT COUNT(r)
         FROM Resena r
@@ -41,8 +37,7 @@ public interface ResenaRepository extends JpaRepository<Resena, UUID> {
           AND r.estado     = 1
         """)
     Long totalResenas(@Param("idBarberia") UUID idBarberia);
- 
-    // Cantidad de reseñas por calificación
+
     @Query("""
         SELECT r.calificacion, COUNT(r)
         FROM Resena r
@@ -53,5 +48,12 @@ public interface ResenaRepository extends JpaRepository<Resena, UUID> {
         ORDER BY r.calificacion DESC
         """)
     List<Object[]> countPorCalificacion(@Param("idBarberia") UUID idBarberia);
+
+    @Query("""
+        SELECT COUNT(r) > 0
+        FROM Resena r
+        WHERE r.idCita = :idCita
+          AND r.isDeleted = false
+        """)
+    boolean existsPorCita(@Param("idCita") UUID idCita);
 }
- 

@@ -1,49 +1,50 @@
 package com.servicesnxs.service.administrative.controller;
- 
+
 import com.servicesnxs.service.administrative.dto.ApiResponse;
+import com.servicesnxs.service.administrative.dto.ResenaCrearRequest;
 import com.servicesnxs.service.administrative.dto.ResenaResumenDTO;
 import com.servicesnxs.service.administrative.dto.ResenaResponseDTO;
 import com.servicesnxs.service.administrative.service.ResenaService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
- 
+
 import java.util.List;
 import java.util.UUID;
- 
+
 @RestController
 public class ResenaController {
- 
+
     private final ResenaService resenaService;
- 
+
     public ResenaController(ResenaService resenaService) {
         this.resenaService = resenaService;
     }
- 
-    // Listar todas las reseñas de una barbería
+
     @GetMapping("/resenas/barberia/{idBarberia}")
-    public ApiResponse<List<ResenaResponseDTO>> listarPorBarberia(
+    public ResponseEntity<ApiResponse<List<ResenaResponseDTO>>> listarPorBarberia(
             @PathVariable UUID idBarberia) {
-        try {
-            return ApiResponse.success(
-                    "RESEÑAS OBTENIDAS CORRECTAMENTE",
-                    resenaService.listarPorBarberia(idBarberia)
-            );
-        } catch (Exception e) {
-            return ApiResponse.error(500, e.getMessage());
-        }
+        var data = resenaService.listarPorBarberia(idBarberia);
+        return ResponseEntity.ok(ApiResponse.success("RESEÑAS OBTENIDAS CORRECTAMENTE", data));
     }
- 
-    // Resumen: promedio + total + desglose por estrellas
+
     @GetMapping("/resenas/barberia/{idBarberia}/resumen")
-    public ApiResponse<ResenaResumenDTO> resumen(
+    public ResponseEntity<ApiResponse<ResenaResumenDTO>> resumen(
             @PathVariable UUID idBarberia) {
-        try {
-            return ApiResponse.success(
-                    "RESUMEN OBTENIDO CORRECTAMENTE",
-                    resenaService.resumen(idBarberia)
-            );
-        } catch (Exception e) {
-            return ApiResponse.error(500, e.getMessage());
-        }
+        var data = resenaService.resumen(idBarberia);
+        return ResponseEntity.ok(ApiResponse.success("RESUMEN OBTENIDO CORRECTAMENTE", data));
+    }
+
+    @GetMapping("/resenas/cita/{idCita}/existe")
+    public ResponseEntity<ApiResponse<Boolean>> existePorCita(@PathVariable UUID idCita) {
+        var data = resenaService.existePorCita(idCita);
+        return ResponseEntity.ok(ApiResponse.success("CONSULTA REALIZADA CORRECTAMENTE", data));
+    }
+
+    @PostMapping("/resenas")
+    public ResponseEntity<ApiResponse<ResenaResponseDTO>> crear(@RequestBody ResenaCrearRequest request) {
+        var data = resenaService.crear(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("RESEÑA CREADA CORRECTAMENTE", data));
     }
 }
- 
